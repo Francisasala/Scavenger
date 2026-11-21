@@ -41,6 +41,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: rustup component add clippy
       - uses: Swatinem/rust-cache@v2
+      # `-D warnings` is the workspace-wide regression guard (issue #1783).
+      # Every `warn`-level lint declared in Cargo.toml [workspace.lints.clippy]
+      # becomes a hard error here, so any new violation breaks CI immediately.
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   clippy-security:
