@@ -3526,6 +3526,7 @@ impl ScavengerContract {
     pub fn redeem_carbon_credits(env: Env, participant: Address, amount: u128) -> Result<u128, Error> {
         Self::require_not_paused(&env);
         participant.require_auth();
+        storage_utils::bump_instance(&env);
 
         if amount == 0 {
             return Err(Error::InvalidAmount);
@@ -3541,7 +3542,10 @@ impl ScavengerContract {
             return Err(Error::InsufficientCarbonCredits);
         }
 
-        stats.carbon_credits_earned -= amount;
+        stats.carbon_credits_earned = stats
+            .carbon_credits_earned
+            .checked_sub(amount)
+            .ok_or(Error::Overflow)?;
         let remaining = stats.carbon_credits_earned;
         env.storage().instance().set(&("stats", participant.clone()), &stats);
 
@@ -3567,6 +3571,7 @@ impl ScavengerContract {
     ) -> Result<u64, Error> {
         Self::require_not_paused(&env);
         seller.require_auth();
+        storage_utils::bump_instance(&env);
 
         if amount == 0 || price_per_credit <= 0 {
             return Err(Error::InvalidListing);
@@ -3583,11 +3588,20 @@ impl ScavengerContract {
         }
 
         // Escrow: subtract from seller stats
-        stats.carbon_credits_earned -= amount;
+        stats.carbon_credits_earned = stats
+            .carbon_credits_earned
+            .checked_sub(amount)
+            .ok_or(Error::Overflow)?;
         env.storage().instance().set(&("stats", seller.clone()), &stats);
 
         // Mint new listing id
-        let id: u64 = env.storage().instance().get(&CARB_LIST_CNT).unwrap_or(0u64) + 1;
+        let id: u64 = env
+            .storage()
+            .instance()
+            .get(&CARB_LIST_CNT)
+            .unwrap_or(0u64)
+            .checked_add(1)
+            .ok_or(Error::Overflow)?;
         env.storage().instance().set(&CARB_LIST_CNT, &id);
 
         let listing = CarbonListing {
@@ -3619,6 +3633,7 @@ impl ScavengerContract {
     pub fn cancel_carbon_listing(env: Env, listing_id: u64, seller: Address) -> Result<(), Error> {
         Self::require_not_paused(&env);
         seller.require_auth();
+        storage_utils::bump_instance(&env);
 
         let mut listing: CarbonListing = env
             .storage()
@@ -3668,6 +3683,7 @@ impl ScavengerContract {
     pub fn purchase_carbon_listing(env: Env, listing_id: u64, buyer: Address) -> Result<(), Error> {
         Self::require_not_paused(&env);
         buyer.require_auth();
+        storage_utils::bump_instance(&env);
 
         let mut listing: CarbonListing = env
             .storage()
@@ -4377,6 +4393,7 @@ impl ScavengerContract {
     pub fn add_waste_tag(env: Env, waste_id: u128, tag: String, caller: Address) -> types::Waste {
         Self::require_not_paused(&env);
         caller.require_auth();
+        storage_utils::bump_instance(&env);
         Self::require_registered(&env, &caller);
 
         let mut waste: types::Waste =
@@ -4409,6 +4426,7 @@ impl ScavengerContract {
     pub fn remove_waste_tag(env: Env, waste_id: u128, tag: String, caller: Address) -> types::Waste {
         Self::require_not_paused(&env);
         caller.require_auth();
+        storage_utils::bump_instance(&env);
         Self::require_registered(&env, &caller);
 
         let mut waste: types::Waste =
@@ -4474,6 +4492,7 @@ impl ScavengerContract {
     pub fn set_waste_image(env: Env, waste_id: u128, hash: String, caller: Address) -> types::Waste {
         Self::require_not_paused(&env);
         caller.require_auth();
+        storage_utils::bump_instance(&env);
         Self::require_registered(&env, &caller);
 
         let mut waste: types::Waste =
@@ -4496,6 +4515,7 @@ impl ScavengerContract {
     pub fn add_waste_document(env: Env, waste_id: u128, hash: String, caller: Address) -> types::Waste {
         Self::require_not_paused(&env);
         caller.require_auth();
+        storage_utils::bump_instance(&env);
         Self::require_registered(&env, &caller);
 
         let mut waste: types::Waste =
@@ -4959,11 +4979,20 @@ impl ScavengerContract {
         Self::only_admin(&env, &admin);
 
         let mut stats = Self::get_transaction_stats(env.clone());
-        stats.total_transactions += 1;
+        stats.total_transactions = stats
+            .total_transactions
+            .checked_add(1)
+            .unwrap_or_else(|| panic_with_error!(&env, Error::Overflow));
         if is_success {
-            stats.successful_transactions += 1;
+            stats.successful_transactions = stats
+                .successful_transactions
+                .checked_add(1)
+                .unwrap_or_else(|| panic_with_error!(&env, Error::Overflow));
         } else {
-            stats.failed_transactions += 1;
+            stats.failed_transactions = stats
+                .failed_transactions
+                .checked_add(1)
+                .unwrap_or_else(|| panic_with_error!(&env, Error::Overflow));
         }
 
         // Rolling average for gas usage
@@ -5526,6 +5555,7 @@ impl ScavengerContract {
     ) -> Challenge {
         Self::only_admin(&env, &admin);
         Self::require_not_paused(&env);
+        storage_utils::bump_instance(&env);
 
         if target_weight == 0 {
             panic_with_error!(&env, Error::InvalidInput);
@@ -5585,6 +5615,8 @@ impl ScavengerContract {
     /// Join a challenge as a registered participant.
     pub fn join_challenge(env: Env, challenge_id: u64, participant: Address) {
         Self::require_not_paused(&env);
+        participant.require_auth();
+        storage_utils::bump_instance(&env);
         Self::only_registered(&env, &participant);
 
         let challenge: Challenge = env
@@ -5632,6 +5664,7 @@ impl ScavengerContract {
     pub fn update_challenge_progress(env: Env, challenge_id: u64, participant: Address, weight_grams: u128) {
         Self::require_not_paused(&env);
         participant.require_auth();
+        storage_utils::bump_instance(&env);
 
         let challenge: Challenge = env
             .storage()
@@ -5690,6 +5723,7 @@ impl ScavengerContract {
     pub fn complete_challenge(env: Env, challenge_id: u64, participant: Address) {
         Self::require_not_paused(&env);
         participant.require_auth();
+        storage_utils::bump_instance(&env);
 
         let challenge: Challenge = env
             .storage()
@@ -6268,6 +6302,7 @@ impl ScavengerContract {
     pub fn set_processing_cost(env: Env, waste_id: u128, owner: Address, cost: u128) -> Result<types::Waste, Error> {
         owner.require_auth();
         Self::require_not_paused(&env);
+        storage_utils::bump_instance(&env);
 
         let mut waste: types::Waste = waste_storage::read_waste(&env, waste_id).ok_or(Error::WasteNotFound)?;
 
@@ -6328,6 +6363,7 @@ impl ScavengerContract {
     ) -> Result<types::Waste, Error> {
         verifier.require_auth();
         Self::require_not_paused(&env);
+        storage_utils::bump_instance(&env);
 
         // Verifier must be a registered Collector or Manufacturer
         let participant = Self::get_participant(env.clone(), verifier.clone()).ok_or(Error::NotRegistered)?;
@@ -6575,6 +6611,7 @@ impl ScavengerContract {
     ) -> Result<(), Error> {
         participant.require_auth();
         Self::require_not_paused(&env);
+        storage_utils::bump_instance(&env);
 
         if Self::get_participant(env.clone(), participant.clone()).is_none() {
             return Err(Error::NotRegistered);
@@ -6750,6 +6787,7 @@ impl ScavengerContract {
     /// - `"Dispute is not pending"` if the dispute was already resolved.
     /// - Admin panic if caller is not an admin.
     pub fn resolve_dispute(env: Env, admin: Address, dispute_id: u64, accepted: bool, note: String) -> Dispute {
+        storage_utils::bump_instance(&env);
         Self::require_admin(&env, &admin);
 
         let mut dispute: Dispute = env
@@ -6904,6 +6942,7 @@ impl ScavengerContract {
     pub fn create_collection_route(env: Env, collector: Address, waste_ids: Vec<u128>) -> CollectionRoute {
         Self::require_not_paused(&env);
         collector.require_auth();
+        storage_utils::bump_instance(&env);
 
         let p: Participant = env
             .storage()
@@ -6959,6 +6998,7 @@ impl ScavengerContract {
     pub fn complete_route(env: Env, collector: Address, route_id: u64) -> CollectionRoute {
         Self::require_not_paused(&env);
         collector.require_auth();
+        storage_utils::bump_instance(&env);
 
         let mut route: CollectionRoute = env
             .storage()
@@ -7026,6 +7066,7 @@ impl ScavengerContract {
     /// Calculate and store quality score for a waste item
     pub fn calculate_quality_score(env: Env, waste_id: u128, scorer: Address) -> Result<QualityScore, Error> {
         scorer.require_auth();
+        storage_utils::bump_instance(&env);
 
         // Get waste item
         let waste: Waste = waste_storage::read_waste(&env, waste_id).ok_or(Error::WasteNotFound)?;
@@ -7092,6 +7133,7 @@ impl ScavengerContract {
         updater: Address,
     ) -> Result<(), Error> {
         updater.require_auth();
+        storage_utils::bump_instance(&env);
 
         // Validate coordinates
         if latitude < -90_000_000 || latitude > 90_000_000 {
@@ -7140,10 +7182,11 @@ impl ScavengerContract {
     /// Create a new waste batch
     pub fn create_waste_batch(env: Env, creator: Address) -> Result<u64, Error> {
         creator.require_auth();
+        storage_utils::bump_instance(&env);
 
         let batch_count: u64 = env.storage().instance().get(&BATCH_COUNT).unwrap_or(0);
 
-        let batch_id = batch_count + 1;
+        let batch_id = batch_count.checked_add(1).ok_or(Error::Overflow)?;
         let batch = WasteBatch::new(batch_id, creator, env.ledger().timestamp(), &env);
 
         env.storage().instance().set(&(BATCH_INDEX, batch_id), &batch);
@@ -7155,6 +7198,7 @@ impl ScavengerContract {
     /// Add waste to a batch
     pub fn add_waste_to_batch(env: Env, batch_id: u64, waste_id: u128, adder: Address) -> Result<(), Error> {
         adder.require_auth();
+        storage_utils::bump_instance(&env);
 
         let mut batch: WasteBatch = env
             .storage()
@@ -7185,6 +7229,7 @@ impl ScavengerContract {
     /// Mark batch as ready
     pub fn mark_batch_ready(env: Env, batch_id: u64, marker: Address) -> Result<(), Error> {
         marker.require_auth();
+        storage_utils::bump_instance(&env);
 
         let mut batch: WasteBatch = env
             .storage()
@@ -7206,6 +7251,7 @@ impl ScavengerContract {
     pub fn process_batch(env: Env, batch_id: u64, processor: Address, note: String) -> Result<(), Error> {
         processor.require_auth();
         Self::require_not_paused(&env);
+        storage_utils::bump_instance(&env);
         Self::only_manufacturer(&env, &processor);
 
         let mut batch: WasteBatch = env
@@ -7267,6 +7313,7 @@ impl ScavengerContract {
         notes: String,
     ) -> Result<(), Error> {
         certifier.require_auth();
+        storage_utils::bump_instance(&env);
 
         // Validate waste exists
         let _waste: Waste = waste_storage::read_waste(&env, waste_id).ok_or(Error::WasteNotFound)?;
