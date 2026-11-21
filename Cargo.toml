@@ -24,24 +24,37 @@ soroban-sdk = "=21.7.7"
 # without each crate needing to repeat the declarations.
 # ---------------------------------------------------------------------------
 [workspace.lints.rust]
-# Treat unused imports/variables as errors to catch dead code early.
-unused = "warn"
+# Treat unused imports/variables as hard errors to catch dead code early.
+# Upgraded from "warn" to "deny" as part of issue #1783 (-D warnings rollout).
+unused = "deny"
 # Forbid unsafe code at the workspace level; individual crates can opt out
 # with an explicit `unsafe_code = "allow"` in their own [lints.rust] section.
-unsafe_code = "warn"
+unsafe_code = "deny"
 
 [workspace.lints.clippy]
-# These four mirror the `deny` list in clippy.toml so that they are enforced
-# through Cargo's lint machinery in addition to the .toml deny file.
+# ---------------------------------------------------------------------------
+# Core safety lints — set to "warn" so that `cargo check`/`cargo build` surface
+# them, and the CI step `cargo clippy -- -D warnings` (issue #1783) promotes
+# every warning to a hard error, ensuring no regression is merged.
+#
+# Using "warn" here (rather than "deny") is intentional: Cargo does not
+# provide a per-cfg lint level, so setting "deny" would also reject the same
+# patterns in `#[cfg(test)]` code where `.unwrap()` and `.expect()` are
+# idiomatic. The CI `-D warnings` flag provides the same enforcement for
+# production code paths without breaking test compilation.
+# ---------------------------------------------------------------------------
 unwrap_used = "warn"
 expect_used = "warn"
 panic = "warn"
-# `integer_arithmetic` was removed from clippy in newer toolchains; the
-# equivalent check is `arithmetic_side_effects`.
+# `integer_arithmetic` was removed from newer Clippy toolchains; the
+# equivalent check that covers overflow is `arithmetic_side_effects`.
 arithmetic_side_effects = "warn"
-# Additional quality lints applied to all crates.
+
+# ---------------------------------------------------------------------------
+# Quality lints — warn to surface issues in CI output without hard-blocking.
+# ---------------------------------------------------------------------------
 pedantic = "warn"
-# Allow the few patterns that `pedantic` flags but are common project-wide.
+# Allow the few patterns that `pedantic` flags but are idiomatic project-wide.
 module_name_repetitions = "allow"
 must_use_candidate = "allow"
 

@@ -1,0 +1,38 @@
+name: PR Title Convention Check
+
+# Regression guard for issue #1784: ensures every PR title follows the
+# Conventional Commits v1.0.0 format defined in CONTRIBUTING.md.
+# Format: <type>(<scope>): <summary>
+# Valid types : feat | fix | docs | chore | refactor | test | style
+# Valid scopes: contract | frontend | scripts | docs (optional)
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [main, develop]
+
+jobs:
+  check-pr-title:
+    name: Validate PR title (Conventional Commits)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          PATTERN='^(feat|fix|docs|chore|refactor|test|style)(\((contract|frontend|scripts|docs)\))?: .{1,72}$'
+          if echo "$PR_TITLE" | grep -qE "$PATTERN"; then
+            echo "✅ PR title is valid: $PR_TITLE"
+          else
+            echo "❌ PR title does not follow Conventional Commits format."
+            echo ""
+            echo "  Expected: <type>(<scope>): <summary>"
+            echo "  Types   : feat | fix | docs | chore | refactor | test | style"
+            echo "  Scopes  : contract | frontend | scripts | docs (optional)"
+            echo "  Example : feat(contract): add token transfer function"
+            echo ""
+            echo "  Got: $PR_TITLE"
+            echo ""
+            echo "See CONTRIBUTING.md § Commit Message Conventions for the full spec."
+            exit 1
+          fi

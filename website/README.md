@@ -25,7 +25,7 @@ npm run serve
 
 ## Deployment
 
-The site is automatically deployed to GitHub Pages on every push to `main` that modifies files in `website/` or `docs/`. See `.github/workflows/docs.yml`.
+The site is automatically deployed to GitHub Pages on every push to `main` that modifies files in `website/` or `docs/`. The deploy workflow lives at `.github/workflows/docs-deploy.yml` (moved from `website/.github/workflows/docs.yml` in issue #1785 — the nested path was never executed by GitHub Actions).
 
 ## Adding Pages
 

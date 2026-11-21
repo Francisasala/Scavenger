@@ -1,5 +1,9 @@
 name: Deploy Documentation
 
+# Moved from website/.github/workflows/docs.yml (issue #1785 — that path is
+# never picked up by GitHub Actions; only workflows under the repo-root
+# .github/workflows/ are executed).
+
 on:
   push:
     branches: [main]

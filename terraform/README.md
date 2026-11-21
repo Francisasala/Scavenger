@@ -1,5 +1,11 @@
 # Terraform Infrastructure as Code Documentation
 
+> **Note — Manual ops only.** Terraform is applied manually by the platform team;
+> there is no automated CI pipeline for it. Do not add speculative or unused
+> modules here without an associated operational runbook or infrastructure ticket.
+> Orphaned modules that are not applied in any environment will be removed on the
+> next cleanup pass (see issue #1782).
+
 ## Overview
 This directory contains Terraform configurations for deploying the Scavenger platform on AWS.
 
