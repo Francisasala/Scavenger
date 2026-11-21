@@ -1,0 +1,12 @@
+# <type>(<scope>): <short summary — imperative mood, lowercase, ≤72 chars>
+#
+# Type  : feat | fix | docs | chore | refactor | test | style
+# Scope : contract | frontend | scripts | docs
+#
+# ── Body (optional) ────────────────────────────────────────────────────────
+# Explain the motivation and context. Wrap at 72 characters.
+# Leave a blank line between the subject and the body.
+
+
+# ── Footer ──────────────────────────────────────────────────────────────────
+# Closes #<issue-number>

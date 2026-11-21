@@ -171,6 +171,9 @@ Every PR must include a description that covers:
 - **Why it changed** — the motivation or problem being solved.
 - **Related issues** — reference any relevant GitHub issue numbers (e.g., `Closes #42`).
 
+The repository provides a PR template (`.github/PULL_REQUEST_TEMPLATE.md`) that
+pre-fills this structure when you open a PR on GitHub. Fill in every section;
+do not delete sections you leave blank — use the checkboxes to show what applies.
 ### 4. Target the Correct Base Branch
 
 Ensure your PR targets the correct base branch (typically `main`). Check the repository's branch strategy before opening your PR and update the base if needed.
@@ -179,6 +182,9 @@ Ensure your PR targets the correct base branch (typically `main`). Check the rep
 
 - At least **one maintainer approval** is required before a PR can be merged.
 - All **CI checks must pass** — do not merge a PR with failing checks.
+- The **PR Title Convention Check** CI job (`pr-title-check.yml`) validates that
+  the PR title follows the Conventional Commits format. The title is used as the
+  squash-merge commit message, so it must pass before the PR can be merged.
 
 ### 6. Keep PRs Focused
 
@@ -214,6 +220,18 @@ Address **one concern per PR**. Large, multi-purpose PRs are harder to review an
 ## Commit Message Conventions
 
 This project follows the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+
+### Commit message template
+
+A `.gitmessage` file at the repository root pre-fills the subject and footer
+format. Configure it once in your local clone:
+
+```bash
+git config commit.template .gitmessage
+```
+
+After that, running `git commit` (without `-m`) will open your editor with the
+template, prompting for type, scope, summary, body, and issue reference.
 
 ### Format
 

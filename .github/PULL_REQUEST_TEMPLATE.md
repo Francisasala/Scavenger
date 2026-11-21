@@ -1,29 +1,45 @@
-## Description
+## What changed
 
-<!-- Briefly describe what this PR does and why -->
+<!-- Clear summary of the modifications made. -->
 
-## Type of Change
+## Why it changed
 
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation
-- [ ] CI / Other
+<!-- The motivation or problem being solved. -->
+
+## Type of change
+
+- [ ] `feat` — new feature
+- [ ] `fix` — bug fix
+- [ ] `docs` — documentation only
+- [ ] `chore` — build process, tooling, or dependency updates
+- [ ] `refactor` — code restructuring without behaviour change
+- [ ] `test` — adding or updating tests
+- [ ] `style` — formatting or whitespace only
+
+## Scope
+
+- [ ] `contract` — Rust / Soroban smart contract
+- [ ] `frontend` — React / TypeScript frontend
+- [ ] `scripts` — build scripts, CI configuration, tooling
+- [ ] `docs` — documentation files
 
 ## Testing
 
-- [ ] Unit tests pass (`cargo test` / `npm test`)
-- [ ] Integration tests pass
-- [ ] Manual testing done
+- [ ] `cargo test` passes (Smart Contract)
+- [ ] `pnpm test` passes (Frontend)
+- [ ] Coverage not reduced for modified modules
+- [ ] New public functions / components have at least one test
 
-## Review Checklist
+## Review checklist
 
-- [ ] Code follows project style (clippy / ESLint clean)
-- [ ] No debug logs or console statements left in
-- [ ] Tests added or updated for changed behaviour
-- [ ] Docs updated if needed
+- [ ] `cargo clippy --all-targets --all-features -- -D warnings` clean
+- [ ] `pnpm exec eslint .` clean
+- [ ] No debug logs or `console.log` statements left in
+- [ ] Docs updated if behaviour changed
 - [ ] Security implications considered
+- [ ] PR targets `main` (or the correct base branch)
 
-## Related Issues
+## Related issues
 
+<!-- Reference issue numbers. Use "Closes #N" to auto-close on merge. -->
 Closes #
