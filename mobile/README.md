@@ -1,109 +1,49 @@
 # Scavenger Mobile App
 
-> ⚠️ **Status: Unmaintained / Archived**
+> ⚠️ **Status: Archived**
 >
-> This directory contains scaffolding from an earlier mobile initiative.
-> It is **not actively maintained**, is **not built or tested in CI**, and
-> is **not part of any current release**.
+> This directory is an archived shell of an earlier mobile initiative.
+> All source files (`src/`) were removed in issue #1785 as unmaintained
+> dead code that was never built or tested in CI and was not part of any
+> release.
 >
-> **Do not use this code in production.**
-> **Do not add new features here.**
->
-> If you want to revive the mobile app, please open an issue titled
-> `[Proposal] Revive mobile app` describing scope, tech stack, and
-> maintenance plan, and wait for maintainer approval before writing code.
+> **Do not add new code here without first opening a revival proposal.**
+> See the Revival Process section below.
 
 ---
 
-# Scavenger Mobile App
+## Why it was archived
 
-React Native mobile application for iOS and Android platforms.
+The mobile app scaffolding accumulated over time but was never:
 
-## Features
+- built or tested in any CI workflow
+- deployed to any release channel
+- kept in sync with the backend API or smart contract
 
-- **Waste Submission**: Submit waste materials with type and weight
-- **Waste Transfer**: Transfer waste between participants
-- **Statistics**: View personal recycling statistics and rewards
-- **Profile Management**: Manage participant profile and settings
-- **Real-time Updates**: Receive notifications for waste transfers and rewards
+Leaving dead code in the repository increases review noise and misleads
+contributors into thinking there is an active mobile surface to maintain.
 
-## Setup
+## Revival process
 
-Prerequisites, environment variables, and first-time setup for the mobile app are in
-the canonical guide:
+If you want to revive the mobile app:
 
-➡️ **[Developer Onboarding Guide — Mobile](../docs/DEVELOPER_ONBOARDING.md#mobile-mobile)**
+1. Open an issue titled `[Proposal] Revive mobile app` describing:
+   - Scope and target platforms (iOS / Android / both)
+   - Chosen tech stack and version constraints
+   - CI/CD plan (what checks will run on every PR)
+   - Maintenance commitment and owner
+2. Wait for maintainer approval before writing any code.
+3. Once approved, build the app from scratch in this directory following
+   the same quality standards as the rest of the repo (CI enforced,
+   tests ≥ 85 % coverage, `eslint` clean).
 
-The mobile app talks to the backend and the deployed contract, so bring the rest of
-the stack up first — that is covered in the same guide.
+## Configuration files retained
 
-## Development
+The following files are kept as a starting point for a future revival:
 
-### iOS
-```bash
-npm run ios
-```
-
-### Android
-```bash
-npm run android
-```
-
-### Start Metro Bundler
-```bash
-npm start
-```
-
-## Building
-
-### iOS Release Build
-```bash
-npm run build:ios
-```
-
-### Android Release Build
-```bash
-npm run build:android
-```
-
-## Project Structure
-
-```
-src/
-├── App.tsx              # Main app component with navigation
-├── screens/             # Screen components
-│   ├── HomeScreen.tsx
-│   ├── WasteSubmissionScreen.tsx
-│   ├── TransferScreen.tsx
-│   ├── ProfileScreen.tsx
-│   └── StatsScreen.tsx
-├── api/                 # API client
-│   └── wasteApi.ts
-├── store/               # State management (Zustand)
-│   └── appStore.ts
-└── types/               # TypeScript types
-```
-
-## Environment Variables
-
-See [Developer Onboarding — Environment Variables](../docs/DEVELOPER_ONBOARDING.md#environment-variables).
-
-## Testing
-
-```bash
-npm test
-```
-
-## Linting
-
-```bash
-npm run lint
-```
-
-## Contributing
-
-See the main project CONTRIBUTING.md for guidelines.
-
-## License
-
-MIT
+| File | Purpose |
+|------|---------|
+| `package.json` | Dependency manifest (versions will need updating) |
+| `tsconfig.json` | TypeScript compiler config |
+| `jest.config.js` | Jest test runner config |
+| `babel.config.js` | Babel transpiler config |

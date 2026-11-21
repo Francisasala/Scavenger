@@ -1,0 +1,29 @@
+name: No new mobile source files
+
+# Regression guard for issue #1785.
+# The mobile/src/ directory was archived in #1785 (all source removed).
+# This job blocks any PR that adds new files under mobile/src/ without
+# going through the revival proposal process described in mobile/README.md.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'mobile/src/**'
+
+jobs:
+  block-mobile-src:
+    name: Block new mobile/src files (archived)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail — mobile/src is archived
+        run: |
+          echo "❌ Files under mobile/src/ were added or modified."
+          echo ""
+          echo "The mobile app is archived (issue #1785). To revive it:"
+          echo "  1. Open an issue titled '[Proposal] Revive mobile app'"
+          echo "  2. Wait for maintainer approval"
+          echo "  3. Build from scratch following CONTRIBUTING.md standards"
+          echo ""
+          echo "See mobile/README.md for the full revival process."
+          exit 1

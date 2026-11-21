@@ -29,11 +29,6 @@ const config = {
           editUrl: 'https://github.com/Xoulomon/Scavenger/edit/main/website/',
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
-          versions: {
-            current: {
-              label: 'Next (Unreleased)',
-            },
-          },
         },
         blog: false,
         theme: {
@@ -72,16 +67,6 @@ const config = {
             label: 'Docs',
           },
           {
-            type: 'docSidebar',
-            sidebarId: 'apiSidebar',
-            position: 'left',
-            label: 'API Reference',
-          },
-          {
-            type: 'docsVersionDropdown',
-            position: 'right',
-          },
-          {
             href: 'https://github.com/Xoulomon/Scavenger',
             label: 'GitHub',
             position: 'right',
@@ -95,8 +80,8 @@ const config = {
             title: 'Docs',
             items: [
               { label: 'Getting Started', to: '/docs/intro' },
-              { label: 'Architecture', to: '/docs/architecture' },
-              { label: 'API Reference', to: '/docs/api/overview' },
+              { label: 'Contributing', to: '/docs/contributing/style-guide' },
+              { label: 'Deployment', to: '/docs/deployment/ci-cd' },
             ],
           },
           {
@@ -109,8 +94,7 @@ const config = {
           {
             title: 'More',
             items: [
-              { label: 'Contributing', to: '/docs/contributing' },
-              { label: 'Governance', to: '/docs/governance/charter' },
+              { label: 'Contributing', to: '/docs/contributing/style-guide' },
             ],
           },
         ],
