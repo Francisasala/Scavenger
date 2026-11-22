@@ -20,7 +20,7 @@ pub mod types_domains;
 mod upgrade;
 mod validation;
 mod verification;
-mod versioning;
+pub mod versioning;
 
 // ── Issue #759: extracted functional modules ──────────────────────────────────
 // Audited under issues #1097/#1100: `participant`, `waste`, and `incentive`
@@ -102,7 +102,24 @@ mod test_grading;
 #[path = "../../contracts/scavenger/src/test_pause.rs"]
 mod test_pause_coverage;
 #[cfg(test)]
+#[path = "../../contracts/scavenger/src/test_emergency_stop.rs"]
+mod test_emergency_stop_coverage;
+#[cfg(test)]
+#[path = "../../contracts/scavenger/src/test_coverage.rs"]
+mod test_coverage;
+#[cfg(test)]
+#[path = "../../contracts/scavenger/src/test_upgrade.rs"]
+mod test_upgrade_migration;
+#[cfg(test)]
 mod test_transfer_path_validation;
+
+#[cfg(test)]
+#[path = "../../contracts/scavenger/src/test_error_handling.rs"]
+mod test_error_handling;
+
+#[cfg(test)]
+#[path = "../../contracts/scavenger/src/test_reward_fuzz.rs"]
+mod test_reward_fuzz_coverage;
 
 #[cfg(test)]
 mod validation_properties;
@@ -124,6 +141,7 @@ pub use types::{
     WasteType,
 };
 pub use upgrade::{ProxyState, UpgradeHistory, UpgradeProposal, UpgradeStatus};
+pub use versioning::{check_version_transition, ApiVersion, VersionInfo};
 pub use verification::{VerificationRecord, VerificationState, VerificationWorkflow};
 
 use soroban_sdk::{
@@ -307,6 +325,14 @@ impl ScavengerContract {
         admins.push_back(admin.clone());
         env.storage().instance().set(&ADMINS, &admins);
 
+        // Issue #1735: persist the current contract version on first initialization.
+        // The key is CONTRACT_VERSION ("CTRCT_VER") and the value is the ApiVersion
+        // integer (2 == ApiVersion::V2). This provides an on-chain migration anchor
+        // for future upgrade/migration logic without changing the public ABI.
+        env.storage()
+            .instance()
+            .set(&storage_keys::CONTRACT_VERSION, &versioning::ApiVersion::current().as_u32());
+
         audit_log::AuditLogService::log_action(
             &env,
             String::from_str(&env, "initialize_admin"),
@@ -344,6 +370,18 @@ impl ScavengerContract {
             .first()
             .unwrap_or_else(|| panic_with_error!(&env, Error::Unauthorized))
             .clone()
+    }
+
+    /// Return the current on-chain contract version written by [`initialize_admin`].
+    ///
+    /// Returns `0` if the contract has never been initialised (pre-upgrade contracts
+    /// that did not store the version key). This is the read side of the
+    /// `CONTRACT_VERSION` ("CTRCT_VER") storage key introduced in issue #1735.
+    pub fn get_contract_version(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get::<_, u32>(&storage_keys::CONTRACT_VERSION)
+            .unwrap_or(0)
     }
 
     /// Transfer admin rights to new addresses (current admin only)
@@ -5007,23 +5045,31 @@ impl ScavengerContract {
 
     // ========== Admin Transfer ==========
 
-    /// Pause the contract (admin only) — blocks all state-changing functions
+    /// Pause the contract (admin only) — blocks all state-changing functions.
+    ///
+    /// # Errors
+    /// - Panics `"Unauthorized"` if `admin` is not in the admin list.
+    /// - Panics `"Contract is already paused"` if the contract is already paused.
     pub fn pause(env: Env, admin: Address) {
         storage_utils::bump_instance(&env);
         Self::require_admin(&env, &admin);
         if env.storage().instance().get::<_, bool>(&PAUSED).unwrap_or(false) {
-            panic_with_error!(&env, Error::InvalidState);
+            panic!("Contract is already paused");
         }
         env.storage().instance().set(&PAUSED, &true);
         events::emit_contract_paused(&env, &admin);
     }
 
-    /// Unpause the contract (admin only)
+    /// Unpause the contract (admin only).
+    ///
+    /// # Errors
+    /// - Panics `"Unauthorized"` if `admin` is not in the admin list.
+    /// - Panics `"Contract is not paused"` if the contract is not currently paused.
     pub fn unpause(env: Env, admin: Address) {
         storage_utils::bump_instance(&env);
         Self::require_admin(&env, &admin);
         if !env.storage().instance().get::<_, bool>(&PAUSED).unwrap_or(false) {
-            panic_with_error!(&env, Error::InvalidState);
+            panic!("Contract is not paused");
         }
         env.storage().instance().set(&PAUSED, &false);
         events::emit_contract_unpaused(&env, &admin);
@@ -5034,9 +5080,11 @@ impl ScavengerContract {
         env.storage().instance().get::<_, bool>(&PAUSED).unwrap_or(false)
     }
 
+    /// Guard that panics with `"Contract is paused"` when the contract is paused.
+    /// Called at the top of every state-mutating public function.
     fn require_not_paused(env: &Env) {
         if env.storage().instance().get::<_, bool>(&PAUSED).unwrap_or(false) {
-            panic_with_error!(&env, Error::InvalidState);
+            panic!("Contract is paused");
         }
     }
 
