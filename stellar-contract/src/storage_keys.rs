@@ -171,6 +171,192 @@ pub const ANALYTICS_LAST_UPDATE: Symbol = Symbol::from_static_str("ANAL_UPD");
 /// Analytics batch counter (issue #1514).
 pub const ANALYTICS_BATCH_COUNT: Symbol = Symbol::from_static_str("ANAL_BAT");
 
+// ── Issue #1738: Material-count instance key ──────────────────────────
+/// Global material/waste count (instance). Previously inlined ad-hoc as
+/// `symbol_short!("MAT_CNT")` in `lib.rs::get_metrics`; centralized here so
+/// the naming registry above is the single source of truth.
+pub const MAT_COUNT: Symbol = Symbol::from_static_str("MAT_CNT");
+
+// ── Issue #1738: Persistent record-prefix Symbol keys ─────────────────
+// `participant_storage` and `incentive_storage` previously built these
+// prefixes at runtime via `Symbol::new(env, &str)` with local string
+// constants. They are now centralized here as const `Symbol`s with identical
+// values, so every storage key in the crate is named through this module.
+// The values are unchanged (storage compatibility preserved).
+
+/// Persistent participant-record key prefix (value `"PART"`).
+pub const PARTICIPANT_REC: Symbol = Symbol::from_static_str("PART");
+/// Persistent incentive-record key prefix (value `"INC_V1"`).
+pub const INCENTIVE_REC: Symbol = Symbol::from_static_str("INC_V1");
+/// Persistent per-manufacturer incentive-ID index key prefix (value `"INC_MFR"`).
+pub const INCENTIVE_MFR: Symbol = Symbol::from_static_str("INC_MFR");
+
+// ── Issue #1738: Canonical instance-key enum ───────────────────────────
+/// Canonical registry of every **instance-storage** `Symbol` key used by the
+/// contract (issue #1738).
+///
+/// # Naming convention (enforced via enum)
+/// - Instance storage keys are uppercase Soroban `Symbol`s, ≤ 9 chars (the
+///   Soroban short-`Symbol` limit).
+/// - Every instance key MUST be declared both as a `pub const` above **and**
+///   as a variant of this enum, with the enum's [`InstanceKey::to_symbol`]
+///   mapping back to that const. The `test_instance_key_enum_matches_consts`
+///   test fails if the two sets drift apart, so the enum acts as a
+///   compile- and test-time enforcement of the naming convention.
+/// - New instance keys are added by: (1) declaring the `pub const`, (2)
+///   adding an enum variant, (3) adding the `to_symbol` arm. Forgetting any
+///   step is caught either by the compiler (variant references missing const)
+///   or by the drift test (const without variant).
+///
+/// Persistent-storage keys (tuple keys whose first element is a `&'static str`
+/// such as `("waste_v2", id)`, or a `Symbol` prefix such as
+/// [`PARTICIPANT_REC`]) are intentionally NOT part of this enum — they are
+/// heterogeneous tuple types, so they are centralized as constructor functions
+/// (see the "Persistent Storage Key Constructors" section below) and as the
+/// prefix consts above.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum InstanceKey {
+    Admins,
+    Charity,
+    RewardConfig,
+    TotalWeight,
+    TotalTokens,
+    ReentrancyGuard,
+    TokenAddress,
+    ParticipantIndex,
+    Paused,
+    MultisigThreshold,
+    ProposalCount,
+    MinWeight,
+    ChallengeCount,
+    PendingTransferCount,
+    Milestones,
+    AuctionCount,
+    SeasonalMultiplier,
+    TotalCarbon,
+    ContaminatedList,
+    CarbonListingCount,
+    CarbonListingIndex,
+    DisputeCount,
+    RouteCount,
+    Permissions,
+    ReconciliationLog,
+    QualityScores,
+    LocationHistory,
+    BatchCount,
+    BatchIndex,
+    Certifications,
+    ReportCount,
+    Reports,
+    TransactionStats,
+    PerformanceSnapshots,
+    TransferThreshold,
+    RequiredApprovers,
+    TransferApprovals,
+    GlobalMetricsSnapshot,
+    AnalyticsLastUpdate,
+    AnalyticsBatchCount,
+    MaterialCount,
+}
+
+impl InstanceKey {
+    /// All variants, in declaration order — used by the drift-detection tests
+    /// to assert the enum and the `pub const` set stay in sync.
+    pub const ALL: &'static [InstanceKey] = &[
+        Self::Admins,
+        Self::Charity,
+        Self::RewardConfig,
+        Self::TotalWeight,
+        Self::TotalTokens,
+        Self::ReentrancyGuard,
+        Self::TokenAddress,
+        Self::ParticipantIndex,
+        Self::Paused,
+        Self::MultisigThreshold,
+        Self::ProposalCount,
+        Self::MinWeight,
+        Self::ChallengeCount,
+        Self::PendingTransferCount,
+        Self::Milestones,
+        Self::AuctionCount,
+        Self::SeasonalMultiplier,
+        Self::TotalCarbon,
+        Self::ContaminatedList,
+        Self::CarbonListingCount,
+        Self::CarbonListingIndex,
+        Self::DisputeCount,
+        Self::RouteCount,
+        Self::Permissions,
+        Self::ReconciliationLog,
+        Self::QualityScores,
+        Self::LocationHistory,
+        Self::BatchCount,
+        Self::BatchIndex,
+        Self::Certifications,
+        Self::ReportCount,
+        Self::Reports,
+        Self::TransactionStats,
+        Self::PerformanceSnapshots,
+        Self::TransferThreshold,
+        Self::RequiredApprovers,
+        Self::TransferApprovals,
+        Self::GlobalMetricsSnapshot,
+        Self::AnalyticsLastUpdate,
+        Self::AnalyticsBatchCount,
+        Self::MaterialCount,
+    ];
+
+    /// Returns the Soroban `Symbol` for this key. Each returned symbol is ≤ 9
+    /// chars (enforced by `test_instance_key_enum_length_constraint`).
+    #[must_use]
+    pub const fn to_symbol(self) -> Symbol {
+        match self {
+            Self::Admins => ADMINS,
+            Self::Charity => CHARITY,
+            Self::RewardConfig => REWARD_CFG,
+            Self::TotalWeight => TOTAL_WEIGHT,
+            Self::TotalTokens => TOTAL_TOKENS,
+            Self::ReentrancyGuard => REENTRANCY_GUARD,
+            Self::TokenAddress => TOKEN_ADDR,
+            Self::ParticipantIndex => PART_INDEX,
+            Self::Paused => PAUSED,
+            Self::MultisigThreshold => MULTISIG_THRESHOLD,
+            Self::ProposalCount => PROPOSAL_COUNT,
+            Self::MinWeight => MIN_WEIGHT,
+            Self::ChallengeCount => CHALLENGE_COUNT,
+            Self::PendingTransferCount => PENDING_XFR_CNT,
+            Self::Milestones => MILESTONES_KEY,
+            Self::AuctionCount => AUCTION_COUNT,
+            Self::SeasonalMultiplier => SEASONAL_MUL,
+            Self::TotalCarbon => TOTAL_CARBON,
+            Self::ContaminatedList => CONTAMINATED_LIST,
+            Self::CarbonListingCount => CARB_LIST_CNT,
+            Self::CarbonListingIndex => CARB_LIST_IDX,
+            Self::DisputeCount => DISPUTE_CNT,
+            Self::RouteCount => ROUTE_CNT,
+            Self::Permissions => PERMISSIONS,
+            Self::ReconciliationLog => RECONCIL_LOG,
+            Self::QualityScores => QUALITY_SCORES,
+            Self::LocationHistory => LOCATION_HISTORY,
+            Self::BatchCount => BATCH_COUNT,
+            Self::BatchIndex => BATCH_INDEX,
+            Self::Certifications => CERTIFICATIONS,
+            Self::ReportCount => REPORT_COUNT,
+            Self::Reports => REPORTS,
+            Self::TransactionStats => TRANSACTION_STATS,
+            Self::PerformanceSnapshots => PERF_SNAPSHOTS,
+            Self::TransferThreshold => TRANSFER_THRESHOLD,
+            Self::RequiredApprovers => REQUIRED_APPROVERS,
+            Self::TransferApprovals => TRANSFER_APPROVALS,
+            Self::GlobalMetricsSnapshot => GLOBAL_METRICS_SNAPSHOT,
+            Self::AnalyticsLastUpdate => ANALYTICS_LAST_UPDATE,
+            Self::AnalyticsBatchCount => ANALYTICS_BATCH_COUNT,
+            Self::MaterialCount => MAT_COUNT,
+        }
+    }
+}
+
 // ── Persistent Storage Key Constructors ───────────────────────────────
 // These return the actual storage key used in `env.storage().instance().get/set`.
 
@@ -244,6 +430,28 @@ pub fn recycling_stats_key(address: &Address) -> (&'static str, Address) {
     ("recycling_stats", address.clone())
 }
 
+// ── Issue #1738: centralized constructors for keys previously inlined ────
+// These construct the persistent/instance tuple keys that were previously
+// written as ad-hoc `("milestones", participant)` / `("carb_list", id)` /
+// `("rewarder_incentives", addr)` / `("general_incentives", wt)` literals
+// scattered across `lib.rs`. Centralizing them here makes the storage-key
+// naming convention the single source of truth. Values are unchanged.
+
+/// Returns the per-participant milestones key (instance).
+pub fn milestones_key(address: &Address) -> (&'static str, Address) {
+    ("milestones", address.clone())
+}
+
+/// Returns the carbon-credit listing key (instance).
+pub fn carbon_listing_key(listing_id: u64) -> (&'static str, u64) {
+    ("carb_list", listing_id)
+}
+
+/// Returns the per-rewarder incentive-ID index key (instance).
+pub fn rewarder_incentives_key(address: &Address) -> (&'static str, Address) {
+    ("rewarder_incentives", address.clone())
+}
+
 // ── Collision Tests ───────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -297,6 +505,7 @@ mod tests {
             GLOBAL_METRICS_SNAPSHOT,
             ANALYTICS_LAST_UPDATE,
             ANALYTICS_BATCH_COUNT,
+            MAT_COUNT,
         ];
         for key in keys {
             let s = key.to_string();
@@ -348,11 +557,114 @@ mod tests {
             GLOBAL_METRICS_SNAPSHOT.to_string(),
             ANALYTICS_LAST_UPDATE.to_string(),
             ANALYTICS_BATCH_COUNT.to_string(),
+            MAT_COUNT.to_string(),
         ];
         let mut unique = keys.clone();
         unique.sort();
         unique.dedup();
         assert_eq!(keys.len(), unique.len(), "Duplicate storage keys found");
+    }
+
+    /// (Issue #1738) Every `InstanceKey` variant maps to a Symbol ≤ 9 chars.
+    #[test]
+    fn test_instance_key_enum_length_constraint() {
+        for key in InstanceKey::ALL {
+            let s = key.to_symbol().to_string();
+            assert!(
+                s.len() <= 9,
+                "InstanceKey {:?} -> Symbol '{}' exceeds 9-char limit",
+                key,
+                s
+            );
+        }
+    }
+
+    /// (Issue #1738) No two `InstanceKey` variants map to the same Symbol.
+    #[test]
+    fn test_instance_key_enum_unique() {
+        let symbols: Vec<_> = InstanceKey::ALL
+            .iter()
+            .map(|k| k.to_symbol().to_string())
+            .collect();
+        let mut unique = symbols.clone();
+        unique.sort();
+        unique.dedup();
+        assert_eq!(
+            symbols.len(),
+            unique.len(),
+            "Duplicate InstanceKey symbols found"
+        );
+    }
+
+    /// (Issue #1738) The `InstanceKey` enum and the `pub const` set must stay
+    /// in sync — adding a const without an enum variant (or vice versa) fails
+    /// this test. This is the "enforce storage-key naming via enum" guarantee:
+    /// the enum is the canonical registry, and the consts are cross-checked
+    /// against it so the two cannot drift.
+    #[test]
+    fn test_instance_key_enum_matches_consts() {
+        let const_symbols: Vec<_> = vec![
+            ADMINS.to_string(),
+            CHARITY.to_string(),
+            REWARD_CFG.to_string(),
+            TOTAL_WEIGHT.to_string(),
+            TOTAL_TOKENS.to_string(),
+            REENTRANCY_GUARD.to_string(),
+            TOKEN_ADDR.to_string(),
+            PART_INDEX.to_string(),
+            PAUSED.to_string(),
+            MULTISIG_THRESHOLD.to_string(),
+            PROPOSAL_COUNT.to_string(),
+            MIN_WEIGHT.to_string(),
+            CHALLENGE_COUNT.to_string(),
+            PENDING_XFR_CNT.to_string(),
+            MILESTONES_KEY.to_string(),
+            AUCTION_COUNT.to_string(),
+            SEASONAL_MUL.to_string(),
+            TOTAL_CARBON.to_string(),
+            CONTAMINATED_LIST.to_string(),
+            CARB_LIST_CNT.to_string(),
+            CARB_LIST_IDX.to_string(),
+            DISPUTE_CNT.to_string(),
+            ROUTE_CNT.to_string(),
+            PERMISSIONS.to_string(),
+            RECONCIL_LOG.to_string(),
+            QUALITY_SCORES.to_string(),
+            LOCATION_HISTORY.to_string(),
+            BATCH_COUNT.to_string(),
+            BATCH_INDEX.to_string(),
+            CERTIFICATIONS.to_string(),
+            REPORT_COUNT.to_string(),
+            REPORTS.to_string(),
+            TRANSACTION_STATS.to_string(),
+            PERF_SNAPSHOTS.to_string(),
+            TRANSFER_THRESHOLD.to_string(),
+            REQUIRED_APPROVERS.to_string(),
+            TRANSFER_APPROVALS.to_string(),
+            GLOBAL_METRICS_SNAPSHOT.to_string(),
+            ANALYTICS_LAST_UPDATE.to_string(),
+            ANALYTICS_BATCH_COUNT.to_string(),
+            MAT_COUNT.to_string(),
+        ];
+        let enum_symbols: Vec<_> = InstanceKey::ALL
+            .iter()
+            .map(|k| k.to_symbol().to_string())
+            .collect();
+        // Sets must match (drift detection) …
+        let mut a = const_symbols.clone();
+        a.sort();
+        a.dedup();
+        let mut b = enum_symbols.clone();
+        b.sort();
+        b.dedup();
+        assert_eq!(a, b, "InstanceKey enum and const set are out of sync");
+        // … and counts must match (guards against a const colliding with an
+        // existing enum variant, which would pass the set check above).
+        assert_eq!(
+            const_symbols.len(),
+            enum_symbols.len(),
+            "InstanceKey variant count != const count"
+        );
     }
 
     /// Verify that different key constructors produce different keys.

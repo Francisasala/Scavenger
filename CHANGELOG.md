@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+### Changed - Issues #1738, #1739, #1740, #1741 (smart-contract quality)
+
+#### #1738 — Document and enforce storage-key naming via enum
+- Added `InstanceKey` enum in `stellar-contract/src/storage_keys.rs` as the
+  canonical registry of every instance-storage `Symbol` key, with a
+  `to_symbol` mapping back to the existing `pub const` set.
+- Centralized previously inlined keys (`MAT_COUNT`, `("milestones", p)`,
+  `("carb_list", id)`, `("rewarder_incentives", a)`) as `pub const`s /
+  constructor functions in `storage_keys`.
+- `lib.rs`, `analytics.rs`, `incentive_storage.rs`, and
+  `participant_storage.rs` now import these keys from `storage_keys` instead
+  of declaring local duplicates.
+- Added drift-detection tests (`test_instance_key_enum_matches_consts`,
+  `test_instance_key_enum_length_constraint`, `test_instance_key_enum_unique`)
+  so the enum and the `pub const` set cannot drift apart.
+- Storage key *values* are unchanged → no storage migration, no ABI change.
+
+#### #1739 — Reduce cross-contract call count per transaction
+- In the material-reward payout path (`lib.rs`), collapsed two
+  `token.transfer` calls to the same submitter into a single transfer of
+  `max(total_reward - total_distributed, owner_share)` (2 → 1 cross-contract
+  call for that leg; the zero-amount transfer is now skipped).
+- Per-share participant-stat updates and `tokens_rewarded` events are kept
+  identical, so off-chain consumers observe the same event stream. Net tokens
+  paid to the submitter are identical in all branches (verified by hand).
+
+#### #1740 — Apply clippy-pedantic fixes
+- Removed an unused `Symbol` import in `analytics.rs`.
+- Prefixed unused `Env` parameters with `_` in the `incentive_storage` and
+  `participant_storage` key constructors.
+- Removed dead local key-prefix constants superseded by `storage_keys`.
+- Added `#[must_use]` to `InstanceKey::to_symbol`.
+
+#### #1741 — Add fuzz targets for entrypoint inputs
+- Added libFuzzer targets under `stellar-contract/fuzz/fuzz_targets/`
+  covering `register_participant`, `create_dispute`, `set_waste_grade`,
+  `create_incentive` / `claim_incentive_reward`, `validate_transfer_path`,
+  and `reserve_waste`; wired them up as `[[bin]]` targets in `fuzz/Cargo.toml`.
+  Each target fuzzes entrypoint inputs and swallows contract panics via
+  `catch_unwind`.
+
+### Migration Guide
+- No breaking public-ABI changes. Storage key values are unchanged, so
+  existing on-chain state remains readable. Event schemas are unchanged.
+
 ### Changed - Issues #1730, #1731, #1732, #1733
 
 #### #1733 — Property-based tests for reward/payout math

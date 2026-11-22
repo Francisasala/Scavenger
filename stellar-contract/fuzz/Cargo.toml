@@ -26,3 +26,38 @@ path = "fuzz_targets/fuzz_deserialization.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "fuzz_incentive"
+path = "fuzz_targets/fuzz_incentive.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_grading"
+path = "fuzz_targets/fuzz_grading.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_dispute"
+path = "fuzz_targets/fuzz_dispute.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_transfer_path"
+path = "fuzz_targets/fuzz_transfer_path.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_waste_reservation"
+path = "fuzz_targets/fuzz_waste_reservation.rs"
+test = false
+doc = false
+bench = false
