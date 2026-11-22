@@ -8,3 +8,4 @@
 export * from './types';
 export * from './factories';
 export * from './handlers';
+export * from './stellar-sdk-mock';

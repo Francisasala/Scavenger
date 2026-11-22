@@ -7,8 +7,10 @@
 
 pub mod contracts;
 pub mod participants;
+pub mod stellar_sdk_mock;
 pub mod waste_batches;
 
 pub use contracts::*;
 pub use participants::*;
+pub use stellar_sdk_mock::*;
 pub use waste_batches::*;
