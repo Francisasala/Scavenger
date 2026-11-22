@@ -59,8 +59,8 @@ const sharedRules = {
   'no-console': ['error', { allow: ['warn', 'error'] }],
   'no-debugger': 'error',
   'no-warning-comments': [
-    'warn',
-    { terms: ['todo', 'fixme', 'xxx'], location: 'anywhere' },
+    'error',
+    { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' },
   ],
   'spaced-comment': ['error', 'always', { markers: ['/'] }],
   'prefer-const': 'error',
@@ -189,8 +189,8 @@ export default [
     rules: {
       'no-inline-comments': 'off',
       'no-warning-comments': [
-        'warn',
-        { terms: ['todo', 'fixme', 'xxx'], location: 'anywhere' },
+        'error',
+        { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' },
       ],
     },
   },

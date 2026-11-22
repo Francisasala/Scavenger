@@ -139,7 +139,8 @@ Consistent style keeps the codebase readable and review cycles short. Run all fo
   ```bash
   pnpm exec eslint .
   ```
-- **Naming conventions** — use `PascalCase` for React components and TypeScript types/interfaces; use `camelCase` for variables and functions.
+- **Naming conventions** — use `PascalCase` for React components and TypeScript types/interfaces; use `camelCase` for variables and functions. These conventions are enforced by CI lint checks and regression tests (see `__tests__/cleanup/`).
+- **Script naming** — use `kebab-case` for all shell script filenames (e.g. `build-wasm.sh`, not `build_wasm.sh`). Enforced by `__tests__/cleanup/scripts.test.ts`.
 - **Function design** — keep functions focused on a single responsibility. Avoid large multi-purpose functions; prefer small, composable units.
 
 ---
