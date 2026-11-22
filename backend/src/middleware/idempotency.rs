@@ -272,11 +272,6 @@ mod tests {
         HttpResponse::Ok().json(serde_json::json!({"count": n}))
     }
 
-    fn app_with_counter() -> (Arc<AtomicU32>, actix_web::dev::ServiceFactory<ServiceRequest>) {
-        // Returns counter and closure – used via test::init_service
-        todo!() // placeholder; see individual tests below for inline approach
-    }
-
     #[actix_web::test]
     async fn no_key_passes_through() {
         let counter = Arc::new(AtomicU32::new(0));
