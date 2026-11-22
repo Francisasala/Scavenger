@@ -104,7 +104,7 @@ Compose starts these services:
 | Service | Port | Purpose |
 |---------|------|---------|
 | `stellar` | 8000 | Standalone Stellar network (Horizon + Soroban RPC) |
-| `postgres` | 5432 | Indexer database (`scavngr`; `scripts/seed.sql` creates the `sync_status` table on first start) |
+| `postgres` | 5432 | Indexer database (`scavngr`; `scripts/seed-test-data.sql` creates the schema on first start) |
 | `redis` | 6379 | Cache |
 | `backend` | 8080 | REST API |
 | `indexer` | 3001 | Event indexer |

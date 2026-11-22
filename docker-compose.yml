@@ -54,7 +54,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - ./scripts/seed-test-data.sql:/docker-entrypoint-initdb.d/seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U scavngr"]
       interval: 5s
