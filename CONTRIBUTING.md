@@ -85,6 +85,8 @@ rustup component add rustfmt
 
 `prettier` and `eslint` are resolved via `pnpm exec` — ensure you have run `pnpm install` first.
 
+`gitleaks` must be installed separately (see [gitleaks releases](https://github.com/gitleaks/gitleaks/releases)).
+
 ### What gets checked
 
 | Hook | Languages | What it does |
@@ -92,6 +94,7 @@ rustup component add rustfmt
 | `cargo-fmt` | Rust (`.rs`) | Runs `cargo fmt --all` and blocks commits that aren't formatted |
 | `prettier` | TS, JS, JSON, CSS, MD | Reformats files to the project's Prettier config |
 | `eslint` | TS, JS | Runs ESLint with `--fix`; blocks commits with unfixable lint errors |
+| `gitleaks` | All tracked files | Scans staged changes for secrets using `.gitleaks.toml` config |
 | `terraform_fmt` / `terraform_validate` | Terraform | Formats and validates Terraform configs |
 | `trailing-whitespace` / `end-of-file-fixer` | All | Generic file hygiene |
 
