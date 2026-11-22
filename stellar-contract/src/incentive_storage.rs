@@ -22,11 +22,12 @@ use crate::errors::Error;
 use crate::types::{Incentive, WasteType};
 
 // ── Storage key constants ────────────────────────────────────────────────────
-
-/// Key prefix for `Incentive` records (persistent).
-pub const INCENTIVE_KEY_PREFIX: &str = "INC_V1";
-/// Key prefix for per-manufacturer incentive-ID index (persistent).
-pub const INCENTIVE_MFR_PREFIX: &str = "INC_MFR";
+// Incentive storage-key prefixes are centralized in `crate::storage_keys`
+// (issue #1738): `INCENTIVE_REC` (value `"INC_V1"`) for `Incentive` records and
+// `INCENTIVE_MFR` (value `"INC_MFR"`) for the per-manufacturer ID index. The
+// previous local `&str` constants were removed in favor of those `Symbol`
+// constants so the contract has a single source of truth for storage-key
+// naming. Key *values* are unchanged (storage-compatible).
 
 // ── Incentive CRUD ───────────────────────────────────────────────────────────
 
@@ -126,15 +127,22 @@ pub fn remove_incentive_from_manufacturer(
 
 // ── Private key constructors ─────────────────────────────────────────────────
 
-fn incentive_key(env: &Env, incentive_id: u64) -> (Symbol, u64) {
-    (Symbol::new(env, INCENTIVE_KEY_PREFIX), incentive_id)
+/// Constructs the persistent-storage key for an `Incentive` record.
+///
+/// The prefix `Symbol` comes from [`crate::storage_keys::INCENTIVE_REC`]
+/// (value `"INC_V1"`), centralized in issue #1738. Key value unchanged.
+fn incentive_key(_env: &Env, incentive_id: u64) -> (Symbol, u64) {
+    (crate::storage_keys::INCENTIVE_REC, incentive_id)
 }
 
 /// Encodes `(manufacturer, waste_type)` into a compound storage key.
 /// `WasteType` is cast to `u32` to keep the key tuple serializable.
-fn mfr_key(env: &Env, manufacturer: &Address, waste_type: WasteType) -> (Symbol, Address, u32) {
+///
+/// The prefix `Symbol` comes from [`crate::storage_keys::INCENTIVE_MFR`]
+/// (value `"INC_MFR"`), centralized in issue #1738. Key value unchanged.
+fn mfr_key(_env: &Env, manufacturer: &Address, waste_type: WasteType) -> (Symbol, Address, u32) {
     (
-        Symbol::new(env, INCENTIVE_MFR_PREFIX),
+        crate::storage_keys::INCENTIVE_MFR,
         manufacturer.clone(),
         waste_type as u32,
     )

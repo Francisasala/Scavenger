@@ -11,10 +11,12 @@ use soroban_sdk::{Address, Env, Vec};
 use crate::errors::Error;
 use crate::types::{Participant, ParticipantInfo};
 
-// Storage key prefix for participant records
-pub const PARTICIPANT_PREFIX: &str = "PART";
-// Storage key for participant index (list of all participant addresses)
-pub const PARTICIPANT_INDEX_KEY: &str = "PART_IDX";
+// Storage key prefixes for participant records are centralized in
+// `crate::storage_keys` (issue #1738): `PARTICIPANT_REC` (value `"PART"`) for
+// the per-participant record and `PART_INDEX` (value `"PART_IDX"`) for the
+// address index. The previous local `&str` constants were removed in favor of
+// those `Symbol` constants so the contract has a single source of truth for
+// storage-key naming. Key *values* are unchanged (storage-compatible).
 
 /// Stores a participant in persistent storage
 ///
@@ -165,7 +167,7 @@ pub fn update_last_active(env: &Env, address: &Address) -> Result<(), Error> {
 /// - `env`: The Soroban environment
 /// - `address`: The participant address to add
 fn add_to_participant_index(env: &Env, address: &Address) {
-    let key = (soroban_sdk::Symbol::new(env, PARTICIPANT_INDEX_KEY),);
+    let key = (crate::storage_keys::PART_INDEX,);
     let mut index: Vec<Address> = env
         .storage()
         .persistent()
@@ -185,7 +187,7 @@ fn add_to_participant_index(env: &Env, address: &Address) {
 /// - `env`: The Soroban environment
 /// - `address`: The participant address to remove
 fn remove_from_participant_index(env: &Env, address: &Address) {
-    let key = (soroban_sdk::Symbol::new(env, PARTICIPANT_INDEX_KEY),);
+    let key = (crate::storage_keys::PART_INDEX,);
     if let Some(mut index) = env
         .storage()
         .persistent()
@@ -209,7 +211,7 @@ fn remove_from_participant_index(env: &Env, address: &Address) {
 /// # Returns
 /// `Vec<Address>` of all registered participant addresses
 pub fn get_all_participants(env: &Env) -> Vec<Address> {
-    let key = (soroban_sdk::Symbol::new(env, PARTICIPANT_INDEX_KEY),);
+    let key = (crate::storage_keys::PART_INDEX,);
     env.storage()
         .persistent()
         .get::<(soroban_sdk::Symbol,), Vec<Address>>(&key)
@@ -275,9 +277,12 @@ pub fn to_participant_info(participant: &Participant) -> ParticipantInfo {
 // Private helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Constructs the persistent-storage key for a participant
-fn participant_key(env: &Env, address: &Address) -> (soroban_sdk::Symbol, Address) {
-    (soroban_sdk::Symbol::new(env, PARTICIPANT_PREFIX), address.clone())
+/// Constructs the persistent-storage key for a participant.
+///
+/// The prefix `Symbol` comes from [`crate::storage_keys::PARTICIPANT_REC`]
+/// (value `"PART"`), centralized in issue #1738. The key value is unchanged.
+fn participant_key(_env: &Env, address: &Address) -> (soroban_sdk::Symbol, Address) {
+    (crate::storage_keys::PARTICIPANT_REC, address.clone())
 }
 
 #[cfg(test)]

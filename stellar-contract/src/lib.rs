@@ -160,74 +160,24 @@ use soroban_sdk::{
 // • Temporary storage  – ephemeral values (reentrancy guard) that must not
 //   survive TTL expiry.
 //
-// Symbol names are kept ≤ 9 chars (Soroban Symbol limit) and are documented
-// here so that future storage migrations have a clear audit trail.
-const ADMINS: Symbol = symbol_short!("ADMINS");
-const CHARITY: Symbol = symbol_short!("CHARITY");
-const REWARD_CFG: Symbol = symbol_short!("RWD_CFG");
-const TOTAL_WEIGHT: Symbol = symbol_short!("TOT_WGT");
-const TOTAL_TOKENS: Symbol = symbol_short!("TOT_TKN");
-const REENTRANCY_GUARD: Symbol = symbol_short!("RE_GUARD");
-const TOKEN_ADDR: Symbol = symbol_short!("TKN_ADDR");
-const PART_INDEX: Symbol = symbol_short!("PART_IDX");
-const PAUSED: Symbol = symbol_short!("PAUSED");
-const MULTISIG_THRESHOLD: Symbol = symbol_short!("MS_THRESH");
-const PROPOSAL_COUNT: Symbol = symbol_short!("PROP_CNT");
-const MIN_WEIGHT: Symbol = symbol_short!("MIN_WGT");
-
-// New feature storage keys
-const CHALLENGE_COUNT: Symbol = symbol_short!("CHAL_CNT");
-const PENDING_XFR_CNT: Symbol = symbol_short!("PXFR_CNT");
-// Note: milestone records are keyed by the string tuple ("milestones", participant)
-// directly in code; no Symbol constant is needed here.
-const AUCTION_COUNT: Symbol = symbol_short!("AUC_CNT");
-
-// Pre-existing missing constants
-const SEASONAL_MUL: Symbol = symbol_short!("SEAS_MUL");
-const TOTAL_CARBON: Symbol = symbol_short!("TOT_CARB");
-const CONTAMINATED_LIST: Symbol = symbol_short!("CONT_LST");
-
-// Carbon credit marketplace counter and active-listing index
-const CARB_LIST_CNT: Symbol = symbol_short!("CARB_CNT");
-const CARB_LIST_IDX: Symbol = symbol_short!("CARB_IDX");
-
-// Dispute system counters (issue #549)
-const DISPUTE_CNT: Symbol = symbol_short!("DISP_CNT");
-
-// Collection route counters (issue #552)
-const ROUTE_CNT: Symbol = symbol_short!("ROUTE_CNT");
-
-// Issue #704: RBAC permission storage key prefix
-const PERMISSIONS: Symbol = symbol_short!("PERMS");
-
-// Issue #706: Reconciliation audit trail storage key prefix
-const RECONCIL_LOG: Symbol = symbol_short!("REC_LOG");
-
-// Issue #654: Quality Scoring storage keys
-const QUALITY_SCORES: Symbol = symbol_short!("QUAL_SC");
-
-// Issue #655: Location Tracking storage keys
-const LOCATION_HISTORY: Symbol = symbol_short!("LOC_HIST");
-
-// Issue #656: Batch Tracking storage keys
-const BATCH_COUNT: Symbol = symbol_short!("BATCH_CNT");
-const BATCH_INDEX: Symbol = symbol_short!("BATCH_IDX");
-
-// Issue #657: Certification storage keys
-const CERTIFICATIONS: Symbol = symbol_short!("CERT_IDX");
-
-// Issue #700: Compliance Reporting storage keys
-const REPORT_COUNT: Symbol = symbol_short!("REP_CNT");
-const REPORTS: Symbol = symbol_short!("REPORTS");
-
-// Issue #703: Performance Benchmarking storage keys
-const TRANSACTION_STATS: Symbol = symbol_short!("TX_STATS");
-const PERF_SNAPSHOTS: Symbol = symbol_short!("PERF_SNP");
-
-// Issue #700: High-value transfer approval storage keys
-const TRANSFER_THRESHOLD: Symbol = symbol_short!("XFR_THRSH");
-const REQUIRED_APPROVERS: Symbol = symbol_short!("REQ_APPR");
-const TRANSFER_APPROVALS: Symbol = symbol_short!("XFR_APPR");
+// ── Issue #1738: instance-storage keys are centralized in `storage_keys` ────
+// These 35 instance-storage `Symbol` keys were previously duplicated here as
+// private `symbol_short!` constants, mirroring `storage_keys`. They now come
+// from the single source of truth in [`storage_keys`], where they are also
+// enumerated by [`storage_keys::InstanceKey`] and cross-checked by
+// collision/drift tests. The imported names keep the same values as before, so
+// storage compatibility and the public ABI are preserved. Symbol names are
+// kept ≤ 9 chars (Soroban short-`Symbol` limit) and documented in `storage_keys`.
+use crate::storage_keys::{
+    ADMINS, CHARITY, REWARD_CFG, TOTAL_WEIGHT, TOTAL_TOKENS, REENTRANCY_GUARD, TOKEN_ADDR,
+    PART_INDEX, PAUSED, MULTISIG_THRESHOLD, PROPOSAL_COUNT, MIN_WEIGHT, CHALLENGE_COUNT,
+    PENDING_XFR_CNT, AUCTION_COUNT, SEASONAL_MUL, TOTAL_CARBON, CONTAMINATED_LIST, CARB_LIST_CNT,
+    CARB_LIST_IDX, DISPUTE_CNT, ROUTE_CNT, PERMISSIONS, RECONCIL_LOG, QUALITY_SCORES,
+    LOCATION_HISTORY, BATCH_COUNT, BATCH_INDEX, CERTIFICATIONS, REPORT_COUNT, REPORTS,
+    TRANSACTION_STATS, PERF_SNAPSHOTS, TRANSFER_THRESHOLD, REQUIRED_APPROVERS, TRANSFER_APPROVALS,
+};
+// Milestone records are keyed by the string tuple ("milestones", participant),
+// now constructed via `storage_keys::milestones_key` (issue #1738).
 
 // Reputation delta constants
 const REP_TRANSFER: i128 = 5;
@@ -3650,7 +3600,7 @@ impl ScavengerContract {
             is_active: true,
             created_at: env.ledger().timestamp(),
         };
-        env.storage().instance().set(&("carb_list", id), &listing);
+        env.storage().instance().set(&storage_keys::carbon_listing_key(id), &listing);
 
         // Append to active-listing index
         let mut idx: Vec<u64> = env.storage().instance().get(&CARB_LIST_IDX).unwrap_or(Vec::new(&env));
@@ -3676,7 +3626,7 @@ impl ScavengerContract {
         let mut listing: CarbonListing = env
             .storage()
             .instance()
-            .get(&("carb_list", listing_id))
+            .get(&storage_keys::carbon_listing_key(listing_id))
             .ok_or(Error::CarbonListingNotFound)?;
 
         if !listing.is_active {
@@ -3699,7 +3649,7 @@ impl ScavengerContract {
         env.storage().instance().set(&("stats", seller.clone()), &stats);
 
         listing.is_active = false;
-        env.storage().instance().set(&("carb_list", listing_id), &listing);
+        env.storage().instance().set(&storage_keys::carbon_listing_key(listing_id), &listing);
 
         Self::remove_active_listing(&env, listing_id);
 
@@ -3726,7 +3676,7 @@ impl ScavengerContract {
         let mut listing: CarbonListing = env
             .storage()
             .instance()
-            .get(&("carb_list", listing_id))
+            .get(&storage_keys::carbon_listing_key(listing_id))
             .ok_or(Error::CarbonListingNotFound)?;
 
         if !listing.is_active {
@@ -3772,7 +3722,7 @@ impl ScavengerContract {
         env.storage().instance().set(&("stats", buyer.clone()), &buyer_stats);
 
         listing.is_active = false;
-        env.storage().instance().set(&("carb_list", listing_id), &listing);
+        env.storage().instance().set(&storage_keys::carbon_listing_key(listing_id), &listing);
 
         Self::remove_active_listing(&env, listing_id);
 
@@ -3787,7 +3737,7 @@ impl ScavengerContract {
 
     /// Get a carbon-credit listing by id.
     pub fn get_carbon_listing(env: Env, listing_id: u64) -> Option<CarbonListing> {
-        env.storage().instance().get(&("carb_list", listing_id))
+        env.storage().instance().get(&storage_keys::carbon_listing_key(listing_id))
     }
 
     /// Get all currently-active carbon-credit listings.
@@ -3795,7 +3745,7 @@ impl ScavengerContract {
         let idx: Vec<u64> = env.storage().instance().get(&CARB_LIST_IDX).unwrap_or(Vec::new(&env));
         let mut out: Vec<CarbonListing> = Vec::new(&env);
         for id in idx.iter() {
-            if let Some(l) = env.storage().instance().get::<_, CarbonListing>(&("carb_list", id)) {
+            if let Some(l) = env.storage().instance().get::<_, CarbonListing>(&storage_keys::carbon_listing_key(id)) {
                 if l.is_active {
                     out.push_back(l);
                 }
@@ -4088,7 +4038,7 @@ impl ScavengerContract {
     /// Returns full Incentive structs for all incentives created by the rewarder
     /// Returns empty vector if rewarder has no incentives
     pub fn get_incentives_by_rewarder(env: Env, rewarder: Address) -> Vec<Incentive> {
-        let key = ("rewarder_incentives", rewarder);
+        let key = storage_keys::rewarder_incentives_key(&rewarder);
         let incentive_ids: Vec<u64> = env.storage().instance().get(&key).unwrap_or(Vec::new(&env));
 
         let mut incentives = Vec::new(&env);
@@ -4112,7 +4062,7 @@ impl ScavengerContract {
     /// active matching incentive exists.
     pub fn get_active_mfr_incentive(env: Env, manufacturer: Address, waste_type: WasteType) -> Option<Incentive> {
         // Get all incentives for this manufacturer
-        let key = ("rewarder_incentives", manufacturer.clone());
+        let key = storage_keys::rewarder_incentives_key(&manufacturer);
         let incentive_ids: Vec<u64> = env.storage().instance().get(&key).unwrap_or(Vec::new(&env));
 
         let mut best_incentive: Option<Incentive> = None;
@@ -4187,7 +4137,7 @@ impl ScavengerContract {
         Self::set_incentive(&env, incentive_id, &incentive);
 
         // Add to rewarder's incentive list
-        let key = ("rewarder_incentives", rewarder.clone());
+        let key = storage_keys::rewarder_incentives_key(&rewarder);
         let mut rewarder_incentives: Vec<u64> = env.storage().instance().get(&key).unwrap_or(Vec::new(&env));
         rewarder_incentives.push_back(incentive_id);
         env.storage().instance().set(&key, &rewarder_incentives);
@@ -4723,7 +4673,7 @@ impl ScavengerContract {
 
     /// Get global contract metrics (total waste count and total tokens earned)
     pub fn get_metrics(env: Env) -> types::GlobalMetrics {
-        let total_wastes_count: u64 = env.storage().instance().get(&symbol_short!("MAT_CNT")).unwrap_or(0);
+        let total_wastes_count: u64 = env.storage().instance().get(&storage_keys::MAT_COUNT).unwrap_or(0);
         let total_tokens_earned: u128 = env.storage().instance().get(&TOTAL_TOKENS).unwrap_or(0);
         let total_carbon_credits: u128 = env.storage().instance().get(&TOTAL_CARBON).unwrap_or(0);
         let (active, expired) = Self::get_lifecycle_summary(env.clone());
@@ -5245,14 +5195,38 @@ impl ScavengerContract {
             }
         }
 
-        token_client.transfer(&manufacturer, &material.submitter, &owner_share);
+        // ── Issue #1739: collapse the two submitter-bound token transfers ──
+        // `material.submitter` is owed `owner_share` and, when a leftover
+        // exists, the `recycler_amount` remainder. Both originate from
+        // `manufacturer` and target the same address, so they are paid in a
+        // single cross-contract `token.transfer` instead of two. The combined
+        // amount equals `owner_share + max(recycler_amount, 0)`, which —
+        // evaluated here, before `owner_share` is folded into
+        // `total_distributed` — simplifies to
+        // `max(total_reward - total_distributed, owner_share)`. The per-share
+        // participant-stat updates and `tokens_rewarded` events below are kept
+        // identical to the original, so off-chain consumers observe the same
+        // event stream; only the number of external token transfers is reduced
+        // (2 → 1 for this leg). Recipient and total tokens paid are unchanged,
+        // so this is behavior-preserving (no ABI change).
+        let submitter_total = if (total_reward - total_distributed) > owner_share {
+            total_reward - total_distributed
+        } else {
+            owner_share
+        };
+        if submitter_total > 0 {
+            token_client.transfer(&manufacturer, &material.submitter, &submitter_total);
+        }
+
         Self::update_participant_stats(&env, &material.submitter, 0, owner_share as u64);
         events::emit_tokens_rewarded(&env, &material.submitter, owner_share as u128, waste_id as u128);
         total_distributed += owner_share;
 
         let recycler_amount = total_reward - total_distributed;
         if recycler_amount > 0 {
-            token_client.transfer(&manufacturer, &material.submitter, &recycler_amount);
+            // No second token transfer — the remainder was already paid above
+            // as part of `submitter_total`. Keep the per-share stats + event
+            // for parity with the original event stream.
             Self::update_participant_stats(&env, &material.submitter, 0, recycler_amount as u64);
             events::emit_tokens_rewarded(&env, &material.submitter, recycler_amount as u128, waste_id as u128);
         }
@@ -6037,7 +6011,7 @@ impl ScavengerContract {
     pub fn get_participant_milestones(env: Env, participant: Address) -> Vec<u32> {
         env.storage()
             .instance()
-            .get(&("milestones", participant))
+            .get(&storage_keys::milestones_key(&participant))
             .unwrap_or(Vec::new(&env))
     }
 
@@ -6050,7 +6024,7 @@ impl ScavengerContract {
             None => return,
         };
 
-        let achieved_key = ("milestones", participant.clone());
+        let achieved_key = storage_keys::milestones_key(participant);
         let mut achieved: Vec<u32> = env.storage().instance().get(&achieved_key).unwrap_or(Vec::new(env));
 
         let titles = [

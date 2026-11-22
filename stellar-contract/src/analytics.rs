@@ -19,7 +19,7 @@
 //! - Periodic batching of analytics updates (NEW)
 
 use crate::types::{GlobalMetrics, RecyclingStats, WasteGrade, WasteType};
-use soroban_sdk::{Address, Env, Symbol};
+use soroban_sdk::{Address, Env};
 
 // ────────────────────────────────────────────────────────────────────────
 // GlobalMetrics Mutation Helpers (from contract_analytics.rs)
@@ -114,14 +114,12 @@ pub fn refresh_recycling_rate(stats: &mut RecyclingStats) {
 // Storage Integration (NEW — issue #1514)
 // ────────────────────────────────────────────────────────────────────────
 
-/// Storage key for global metrics snapshot
-pub const GLOBAL_METRICS_SNAPSHOT: Symbol = soroban_sdk::symbol_short!("GMTR_SNAP");
-
-/// Storage key for analytics update timestamp
-pub const ANALYTICS_LAST_UPDATE: Symbol = soroban_sdk::symbol_short!("ANAL_UPD");
-
-/// Storage key for analytics batch counter
-pub const ANALYTICS_BATCH_COUNT: Symbol = soroban_sdk::symbol_short!("ANAL_BAT");
+// ── Issue #1738: analytics storage keys are centralized in `storage_keys` ──
+// These three instance-storage keys were duplicated here as `symbol_short!`
+// constants; they now come from the single source of truth in
+// `crate::storage_keys` (where they are also variants of
+// `storage_keys::InstanceKey`). Values are unchanged (storage-compatible).
+use crate::storage_keys::{ANALYTICS_BATCH_COUNT, ANALYTICS_LAST_UPDATE, GLOBAL_METRICS_SNAPSHOT};
 
 /// Number of transactions between analytics snapshots (configurable).
 /// Current setting: snapshot every 10 transactions to balance consistency vs storage costs.
