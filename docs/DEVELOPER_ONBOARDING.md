@@ -184,7 +184,7 @@ let status2 = env.storage().instance().get(&KEY_STATUS).unwrap(); // redundant
 
 **Formatting** — Prettier with `.prettierrc` config.
 
-**Linting** — ESLint with `.eslintrc.cjs`.
+**Linting** — ESLint with `eslint.config.js` (flat config).
 
 **Patterns:**
 

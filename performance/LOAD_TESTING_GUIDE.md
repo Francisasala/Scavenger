@@ -37,39 +37,39 @@ choco install k6
 ### Run Default Smoke Test
 
 ```bash
-./scripts/run-perf-tests.sh
+./performance/run-perf-tests.sh
 ```
 
 ### Run Specific Profile
 
 ```bash
 # Load test
-./scripts/run-perf-tests.sh --profile load
+./performance/run-perf-tests.sh --profile load
 
 # Stress test (WARNING: resource intensive)
-./scripts/run-perf-tests.sh --profile stress
+./performance/run-perf-tests.sh --profile stress
 
 # Soak test (40+ minute test)
-./scripts/run-perf-tests.sh --profile soak
+./performance/run-perf-tests.sh --profile soak
 ```
 
 ### Run All Profiles Sequentially
 
 ```bash
-./scripts/run-perf-tests.sh --all
+./performance/run-perf-tests.sh --all
 ```
 
 ### With Custom Configuration
 
 ```bash
 # Custom API URL
-BASE_URL=https://api.example.com ./scripts/run-perf-tests.sh --profile load
+BASE_URL=https://api.example.com ./performance/run-perf-tests.sh --profile load
 
 # Custom contract ID
-CONTRACT_ID=CABC... ./scripts/run-perf-tests.sh --profile load
+CONTRACT_ID=CABC... ./performance/run-perf-tests.sh --profile load
 
 # Output JSON results
-./scripts/run-perf-tests.sh --profile load --json --output reports/
+./performance/run-perf-tests.sh --profile load --json --output reports/
 ```
 
 ## Manual k6 Commands

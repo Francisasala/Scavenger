@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run the full fuzzing test suite for the Scavenger smart contract.
 #
-# Usage: ./scripts/run_fuzz_tests.sh [--help]
+# Usage: ./scripts/run-fuzz-tests.sh [--help]
 
 set -euo pipefail
 
